@@ -5,3 +5,4 @@ src/
 week2_plantvillage_raw_data.zip
 week2_plantvillage_raw_data/
 .venv   
+field_images_augmented/
