@@ -4,3 +4,4 @@ week2_plantvillage_raw_data/
 .venv   
 field_images_augmented/
 .DS_Store
+.gradio

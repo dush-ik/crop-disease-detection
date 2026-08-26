@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Deployment Brief — Crop Disease Classification Decision-Support Tool</title>
+<style>
+  @page { margin: 20mm 18mm; }
+  body {
+    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: #1a1a1a;
+    line-height: 1.55;
+    font-size: 11.5pt;
+  }
+  h1 { font-size: 22pt; margin-bottom: 4px; color: #1a3c2b; }
+  h2 { font-size: 15pt; margin-top: 28px; border-bottom: 2px solid #2f7a4f; padding-bottom: 4px; color: #1a3c2b; }
+  h3 { font-size: 12.5pt; margin-top: 18px; color: #2f7a4f; }
+  .subtitle { font-size: 12pt; color: #555; margin-bottom: 24px; }
+  .callout {
+    background: #fff6e5; border-left: 4px solid #d99400; padding: 10px 14px; margin: 14px 0;
+    font-size: 10.8pt;
+  }
+  .callout.danger { background: #fdecea; border-left-color: #c0392b; }
+  .callout.good { background: #eaf7ee; border-left-color: #2f7a4f; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10.5pt; }
+  th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+  th { background: #eef3ee; }
+  code, pre {
+    background: #f5f5f5; border-radius: 4px; font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 9.5pt;
+  }
+  pre { padding: 10px 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+  .figure { margin: 16px 0; text-align: center; page-break-inside: avoid; }
+  .figure img { max-width: 100%; border: 1px solid #ddd; border-radius: 4px; }
+  .figure .caption { font-size: 9.5pt; color: #555; margin-top: 6px; font-style: italic; text-align: left; }
+  .page-break { page-break-before: always; }
+  ul { margin: 6px 0; padding-left: 22px; }
+  li { margin-bottom: 4px; }
+  .meta { font-size: 9.5pt; color: #777; margin-bottom: 10px; }
+  table.doc-header {
+    width: auto; margin: 0 0 24px 0; border: none; font-size: 9.5pt;
+  }
+  table.doc-header td { border: none; padding: 2px 10px 2px 0; }
+  table.doc-header td:first-child { color: #555; white-space: nowrap; width: 90px; }
+  .verified-badge {
+    display: inline-block; background: #2f7a4f; color: white; font-size: 8.5pt;
+    padding: 2px 8px; border-radius: 10px; margin-left: 6px; vertical-align: middle;
+  }
+  .result-yes { color: #1a7a3c; font-weight: bold; }
+  .result-no { color: #c0392b; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>Deployment Brief</h1>
+<div class="subtitle">Crop Disease Classification Decision-Support Tool</div>
+<div class="meta">Prepared for: agricultural extension use case, per project proposal Objective 3 &amp; Section 5.2 &nbsp;|&nbsp; Model: ResNet-50 (fine-tuned) &nbsp;|&nbsp; Status: prototype</div>
+
+<table class="doc-header">
+<tr><td><strong>Project</strong></td><td>Crop Disease Classification Using Transfer Learning — Group 5</td></tr>
+<tr><td><strong>Prepared by</strong></td><td>Deepthi Prakash, Shahina Pathan, Venkata S. Sarma, Dushyant Kumar</td></tr>
+<tr><td><strong>Version</strong></td><td>1.1</td></tr>
+<tr><td><strong>Status</strong></td><td>Prototype</td></tr>
+</table>
+
+<h2>1. Purpose</h2>
+<p>This tool is a <strong>decision-support aid</strong>, not an automated diagnostic system. It takes a photograph of a
+crop leaf and suggests possible diseases, along with a confidence score and a visual explanation of what the tool
+"looked at" to make its suggestion. It is designed to help extension workers <strong>triage and prioritize</strong>
+cases quickly — not to replace expert diagnosis or guide treatment decisions on its own.</p>
+
+<h2>2. How It Works</h2>
+<ol>
+  <li>Upload a photo of a single leaf.</li>
+  <li>The tool returns its <strong>top 3 most likely diseases</strong>, each with a confidence percentage.</li>
+  <li>A <strong>heatmap overlay (Grad-CAM)</strong> shows which part of the leaf image most influenced the prediction —
+      useful for sanity-checking whether the tool is focusing on an actual lesion/spot rather than something
+      irrelevant in the photo.</li>
+</ol>
+<p>This runs as a simple local demo (built with <a href="https://gradio.app">Gradio</a>); no internet connection or
+account is required to use it.</p>
+
+<h2>3. How Much to Trust It</h2>
+<ul>
+  <li>On <strong>standardized, well-lit, single-leaf photographs</strong> (similar to the conditions used to train
+  the tool), it correctly identifies the disease <strong>over 99% of the time</strong>, across 38 disease/healthy
+  categories spanning 14 crop types.</li>
+  <li>Confidence scores have been calibrated so that, under those same conditions, a "90% confident" prediction is
+  genuinely right about 90% of the time — making the confidence score a meaningful signal for deciding when to
+  double-check a result with an expert.</li>
+</ul>
+
+<div class="callout danger">
+<strong>Important limitation — real-world field photos:</strong> When tested on real field photographs, accuracy
+dropped substantially, and the tool was sometimes <strong>confidently wrong</strong> rather than appropriately unsure.
+See Section 6 for verified evidence. Do not rely on the confidence score alone as a "safe" signal when the photo
+doesn't closely resemble a clean, close-up single-leaf shot.
+</div>
+
+<h2>4. Recommended Usage Workflow</h2>
+<ol>
+  <li>Take a clear, close-up photo of a single affected leaf (plain background if possible, leaf filling most of the
+  frame, good lighting).</li>
+  <li>Use the tool's top-3 suggestions as a <strong>starting point for investigation</strong>, not a final answer.</li>
+  <li>Cross-check the heatmap: if it highlights the visible lesion/spot, that's a good sign; if it highlights
+  background or irrelevant areas, treat the prediction with extra caution.</li>
+  <li>For any decision affecting treatment, spraying, or economic loss, <strong>escalate to a human expert or
+  regional agronomist</strong> rather than acting on the tool's output alone.</li>
+  <li>Do <strong>not</strong> use this tool to make pesticide or treatment recommendations directly.</li>
+</ol>
+
+<h2>5. Known Limitations</h2>
+<ul>
+  <li>Covers only 38 disease/healthy categories across the crops in the PlantVillage dataset.</li>
+  <li>Performance is best on photos resembling standardized lab conditions; real field photo accuracy is meaningfully
+  lower (Section 6).</li>
+  <li>No handling yet for multiple diseases in one photo, multiple leaves in one frame, or non-leaf images.</li>
+  <li>Not validated for any specific geographic region, crop variety, or growth stage.</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>6. Field Generalisation Testing <span class="verified-badge">VERIFIED — actually executed</span></h2>
+
+<p><strong>Motivation.</strong> As anticipated in the project proposal (Challenges #3 and #7), PlantVillage images are
+captured under controlled, uniform-background studio conditions. To assess whether the model's near-ceiling test
+performance (macro-F1 = 0.991) would transfer to real-world usage, the final fine-tuned ResNet-50 was evaluated on a
+set of independent field images sourced from the University of Georgia's IPM Images / Bugwood.org archive — an
+agricultural extension image repository entirely separate from PlantVillage.</p>
+
+<p><strong>Method.</strong> Six images were selected, each verified against the archive's own disease-label metadata
+before use, spanning five distinct diseases already present in the model's 38 trained classes. Each image was passed
+through the identical preprocessing pipeline used for evaluation (resize, ImageNet normalization) and the identical
+temperature-scaled confidence from the calibration analysis (T = 0.615). All results below were captured live from the
+running Gradio prototype — not simulated.</p>
+
+<h3>Result summary</h3>
+<table>
+<tr><th>#</th><th>Verified true label</th><th>Model's #1 prediction</th><th>Confidence</th><th>Result</th></tr>
+<tr><td>1</td><td>Corn common rust</td><td>Corn Northern Leaf Blight</td><td>99%</td><td class="result-no">✗ Wrong</td></tr>
+<tr><td>2</td><td>Apple scab</td><td>Corn common rust</td><td>81%</td><td class="result-no">✗ Wrong</td></tr>
+<tr><td>3</td><td>Citrus greening (HLB) — example A</td><td>Tomato yellow leaf curl virus</td><td>90%</td><td class="result-no">✗ Wrong</td></tr>
+<tr><td>4</td><td>Tomato late blight</td><td>Tomato late blight</td><td>100%</td><td class="result-yes">✓ Correct</td></tr>
+<tr><td>5</td><td>Citrus greening (HLB) — example B</td><td>Citrus greening (HLB)</td><td>71%</td><td class="result-yes">✓ Correct</td></tr>
+<tr><td>6</td><td>Peach bacterial spot</td><td>Peach bacterial spot</td><td>100%</td><td class="result-yes">✓ Correct</td></tr>
+</table>
+
+<p>Overall: <strong>3 of 6 field images correctly classified (50%)</strong>, against 99.4% accuracy / 0.991 macro-F1
+on the PlantVillage held-out test set. Notably, the two citrus greening examples (rows 3 and 5) show that outcome can
+swing either way even for the same disease, depending on the individual photo — reinforcing that this is a genuine
+distribution-shift issue rather than a single bad example.</p>
+
+<h3>Live demo verification — genuine screenshots</h3>
+<p>The figures below are actual screenshots captured from the running Gradio prototype, confirming the results in the
+table above.</p>
+
+<div class="figure">
+<img src="corn-blight.jpeg">
+<div class="caption">Figure 1 — Real field photo, verified true label: <strong>Corn common rust</strong> (IPM Images
+#5624655). Misclassified as "Corn Northern Leaf Blight" at 99% confidence. The Grad-CAM heatmap does concentrate on
+the rust pustules themselves, indicating the model attended to the correct region of the leaf — yet still selected
+the wrong specific disease, illustrating that attention on the lesion does not guarantee a correct diagnosis under
+distribution shift.</div>
+</div>
+
+<div class="figure">
+<img src="corn-rust.jpeg">
+<div class="caption">Figure 2 — Real field photo, verified true label: <strong>Apple scab</strong> (IPM Images
+#1496042). Misclassified as "Corn common rust" at 81% confidence. Note the studio-style black/white backdrop of this
+archival specimen photo — a plausible contributor to the background-bias hypothesis discussed below.</div>
+</div>
+
+<div class="figure">
+<img src="tomato-yellow.jpeg">
+<div class="caption">Figure 3 — Real field photo, verified true label: <strong>Citrus greening (Huanglongbing)</strong>
+(IPM Images #5384450). Misclassified as "Tomato Yellow Leaf Curl Virus" at 90% confidence, with the correct label
+ranked second at only 7%. HLB's subtle, blotchy mottling symptom is inherently harder to distinguish than more
+obvious lesion-based diseases.</div>
+</div>
+
+<div class="page-break"></div>
+
+<div class="figure">
+<img src="tomato-blight.jpeg">
+<div class="caption">Figure 4 — Real field photo, verified true label: <strong>Tomato late blight</strong> (IPM Images
+#5628909). Correctly classified at 100% confidence, with the Grad-CAM heatmap concentrated directly on the visible
+dark lesion.</div>
+</div>
+
+<div class="figure">
+<img src="citrus-greening.jpeg">
+<div class="caption">Figure 5 — Real field photo, verified true label: <strong>Citrus greening (Huanglongbing)</strong>,
+a second independent example (IPM Images #5585642). Correctly classified at 71% confidence — notably lower than the
+near-100% confidence typical on lab-style images, an appropriately cautious response to a genuinely subtler symptom.
+The Grad-CAM heatmap concentrates on the yellowing leaf tissue itself.</div>
+</div>
+
+<div class="figure">
+<img src="peach-bacterial.jpeg">
+<div class="caption">Figure 6 — Real field photo, verified true label: <strong>Peach bacterial spot</strong> (IPM
+Images #UGA0162025). Correctly classified at 100% confidence, with the heatmap concentrated on the dark bacterial
+lesions across all three leaves in frame.</div>
+</div>
+
+<p><strong>Interpretation.</strong> This 50% field accuracy (vs. 99.4% on the PlantVillage test set) is consistent with
+the background-bias risk identified in the proposal: PlantVillage's uniform studio backgrounds (plain black, white, or
+gray backdrops) may have allowed the model to partially key on background texture rather than relying solely on
+disease-lesion features — visible directly in Figure 2, where the misclassified apple scab photo itself uses a
+studio-style backdrop closely resembling PlantVillage's own style, yet was still misclassified. Field photographs with
+natural backgrounds, soil, and foliage fall outside this learned distribution more broadly. Critically, the
+confidence-calibration mechanism does not reliably degrade under this distribution shift in every case; three of the
+six predictions above remained confidently wrong (81–99%) rather than appropriately uncertain, though notably the
+correct citrus greening prediction (Figure 5, 71%) does show the model can express lower confidence appropriately on
+harder cases.</p>
+
+<div class="callout">
+<strong>Deployment implication:</strong> consistent with the project's stated position, this reinforces that the
+system must be deployed strictly as <strong>decision support</strong>, not autonomous diagnosis, and that confidence
+scores alone cannot yet be fully trusted as a reliable escalation signal for out-of-distribution field images.
+</div>
+
+<h3>Recommended future work</h3>
+<ul>
+  <li><strong>Background-replacement augmentation</strong> — the dataset's pre-segmented leaf masks could be
+  composited onto varied real-world backgrounds during training, directly targeting the suspected background-keying
+  behavior.</li>
+  <li><strong>Fine-tuning on real field imagery</strong> — supplementing training with a field-condition dataset such
+  as PlantDoc (2,598 real-world images across overlapping crop/disease categories).</li>
+  <li><strong>Larger-scale field evaluation</strong> — this test used a modest, illustrative sample (n=6); a
+  statistically robust assessment would require dozens of verified field images per class.</li>
+  <li><strong>Out-of-distribution detection</strong> — a mechanism to flag inputs that fall outside the training
+  distribution, rather than relying solely on softmax confidence.</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>7. Technical Deployment Details</h2>
+
+<h3>7.1 Deployment Overview &amp; Architecture</h3>
+<ul>
+  <li><strong>Model format:</strong> PyTorch serialized state dictionary (<code>.pth</code>)</li>
+  <li><strong>Model architecture:</strong> ResNet-50 (ImageNet-pretrained backbone, fine-tuned), 23,585,894 total parameters</li>
+  <li><strong>Artifact file:</strong> <code>new_saved_models/resnet50_unfrozen_best_state_100p.pth</code> (90.3 MB, verified on disk)</li>
+  <li><strong>Inference engine:</strong> PyTorch CPU runtime (no GPU required for inference)</li>
+  <li><strong>Interface:</strong> Gradio local web demo (<code>app.py</code>) — a single-process local application accessed via browser, not a REST API</li>
+</ul>
+
+<h3>System flow</h3>
+<pre>[User] -&gt; uploads leaf photo via Gradio browser UI
+       |
+[PIL.Image] -&gt; convert to RGB -&gt; torchvision.transforms (resize 224x224, ToTensor, ImageNet normalize)
+       |
+[ResNet-50 model] -&gt; load_state_dict(.pth) -&gt; model.eval() -&gt; forward pass (torch.no_grad())
+       |
+[Post-processing] -&gt; softmax(logits / T) with calibrated temperature T=0.615 -&gt; top-3 classes
+       |
+[Grad-CAM] -&gt; hook on layer4[-1] -&gt; backward pass on predicted class -&gt; heatmap overlay
+       |
+[Gradio UI] -&gt; displays top-3 predictions + confidence + Grad-CAM image</pre>
+
+<h3>7.2 Configuration &amp; Python Dependencies</h3>
+<p><strong>Python version:</strong> 3.12.12 (verified) &nbsp;|&nbsp; CPU-only PyTorch is sufficient — verified to load
+and run inference correctly with no GPU present.</p>
+<pre>torch==2.13.0
+torchvision==0.28.0
+pillow==12.3.0
+matplotlib          # required for Grad-CAM colormap rendering
+gradio
+numpy</pre>
+<div class="callout">
+<strong>Genuine finding during verification:</strong> the first deployment attempt failed with
+<code>ModuleNotFoundError: No module named 'matplotlib'</code> — matplotlib is required for the Grad-CAM heatmap
+colormap and must be included in the dependency list above; it is easy to omit since the main prediction path does
+not need it.
+</div>
+
+<h3>7.3 Operational Verification <span class="verified-badge">actually executed, not simulated</span></h3>
+
+<table>
+<tr><th>Test</th><th>Input</th><th>Result</th><th>Details</th></tr>
+<tr>
+  <td>1 — Valid image</td>
+  <td><code>Apple___healthy</code> sample</td>
+  <td>✅ SUCCESS</td>
+  <td>Predicted: Apple___healthy, confidence 1.0000, inference time 0.0313s, model load time 0.387s</td>
+</tr>
+<tr>
+  <td>2 — Invalid input</td>
+  <td>Non-image <code>.txt</code> file</td>
+  <td>⚠️ ERROR (expected, caught)</td>
+  <td><code>PIL.UnidentifiedImageError: cannot identify image file</code></td>
+</tr>
+<tr>
+  <td>3 — Corrupted image</td>
+  <td>Truncated/garbage <code>.jpg</code> bytes</td>
+  <td>⚠️ ERROR (expected, caught)</td>
+  <td><code>OSError: Truncated File Read</code></td>
+</tr>
+</table>
+
+<p>Implication: the demo must wrap image loading in a try/except and show the user a clear "please upload a valid
+image" message for both invalid and corrupted uploads, since PIL raises these errors rather than failing silently or
+crashing the whole app.</p>
+
+<h3>7.4 Deployment Risk &amp; Mitigations</h3>
+<ul>
+  <li><strong>Memory:</strong> <code>torch.no_grad()</code> is used during the main inference pass to avoid building a
+  gradient graph; Grad-CAM separately requires gradients only for its own scoped backward hook.</li>
+  <li><strong>Error handling:</strong> confirmed above — invalid/corrupted image uploads raise catchable exceptions
+  rather than crashing silently.</li>
+  <li><strong>Reproducibility risk:</strong> the fitted temperature (T=0.615) and checkpoint are tied to this specific
+  training run — if the model is retrained, both the checkpoint path and <code>TEMPERATURE</code> constant must be
+  updated together, or confidence scores will be miscalibrated.</li>
+</ul>
+
+<h2>8. Summary Metrics (Technical Appendix)</h2>
+<table>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Model</td><td>ResNet-50 (ImageNet-pretrained, fine-tuned)</td></tr>
+<tr><td>Held-out test accuracy</td><td>99.4%</td></tr>
+<tr><td>Held-out test macro-F1</td><td>0.991</td></tr>
+<tr><td>Calibration (ECE)</td><td>0.049 → 0.004 after temperature scaling (T = 0.615)</td></tr>
+<tr><td>Field-photo accuracy (verified sample, n=6)</td><td>50% (3/6 correct), three high-confidence errors</td></tr>
+<tr><td>Minimum training data for target macro-F1 (≥0.88)</td><td>Achieved with as little as 15% of available training data</td></tr>
+<tr><td>Total model parameters</td><td>23,585,894</td></tr>
+<tr><td>Checkpoint file size</td><td>90.3 MB</td></tr>
+</table>
+
+</body>
+</html>
